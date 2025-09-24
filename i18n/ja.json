@@ -1,0 +1,16 @@
+{
+  "title": "メモ・翻訳・要約",
+  "input": "入力",
+  "output1": "出力A",
+  "output2": "出力B",
+  "mode.translate": "翻訳",
+  "mode.summarize": "要約",
+  "mode.detect": "言語判定",
+  "mode.free": "自由入力",
+  "lang.auto": "自動",
+  "share": "共有",
+  "history": "履歴",
+  "export": "エクスポート",
+  "settings": "設定"
+}
+

@@ -1,0 +1,16 @@
+{
+  "title": "Memo · Translate · Summarize",
+  "input": "Input",
+  "output1": "Output A",
+  "output2": "Output B",
+  "mode.translate": "Translate",
+  "mode.summarize": "Summarize",
+  "mode.detect": "Detect Lang",
+  "mode.free": "Free",
+  "lang.auto": "Auto",
+  "share": "Share",
+  "history": "History",
+  "export": "Export",
+  "settings": "Settings"
+}
+
