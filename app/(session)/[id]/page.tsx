@@ -24,6 +24,9 @@ export default function SessionPage(props: any) {
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
   const abortARef = useRef<AbortController | null>(null);
   const abortBRef = useRef<AbortController | null>(null);
+  const [copiedInput, setCopiedInput] = useState(false);
+  const [copiedA, setCopiedA] = useState(false);
+  const [copiedB, setCopiedB] = useState(false);
 
   const LANGS = [
     { code: 'auto', name: 'Auto' },
@@ -117,6 +120,16 @@ export default function SessionPage(props: any) {
     }
   }
 
+  async function copyToClipboard(text: string, setFlag: (v: boolean) => void) {
+    try {
+      await navigator.clipboard.writeText(text ?? '');
+      setFlag(true);
+      setTimeout(() => setFlag(false), 1200);
+    } catch {
+      setAlertMsg('クリップボードへのコピーに失敗しました');
+    }
+  }
+
   const debouncedA = useMemo(() => debounce(() => runGenerate(1), 500), [model, modeA, sourceLang, targetLangA, sessionId]);
   const debouncedB = useMemo(() => debounce(() => runGenerate(2), 500), [model, modeB, sourceLang, targetLangB, sessionId]);
 
@@ -154,7 +167,16 @@ export default function SessionPage(props: any) {
       )}
       <main className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1 min-h-0">
         <section className="border-r p-3 flex flex-col min-h-0">
-          <div className="text-sm font-medium mb-2">Input</div>
+          <div className="text-sm font-medium mb-2 flex items-center justify-between">
+            <span>Input</span>
+            <div>
+              <button
+                className="border rounded px-2 py-0.5 text-xs"
+                onClick={() => copyToClipboard(inputText, setCopiedInput)}
+                disabled={!inputText.trim()}
+              >{copiedInput ? 'Copied' : 'Copy'}</button>
+            </div>
+          </div>
           <textarea
             value={inputText}
             onChange={e=>setInputText(e.target.value)}
@@ -182,6 +204,10 @@ export default function SessionPage(props: any) {
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
               </select>
+              <button
+                className="border rounded px-2 py-0.5 text-xs"
+                onClick={() => copyToClipboard(outA, setCopiedA)}
+              >{copiedA ? 'Copied' : 'Copy'}</button>
             </div>
           </div>
           <MarkdownPane content={outA} />
@@ -202,6 +228,10 @@ export default function SessionPage(props: any) {
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
               </select>
+              <button
+                className="border rounded px-2 py-0.5 text-xs"
+                onClick={() => copyToClipboard(outB, setCopiedB)}
+              >{copiedB ? 'Copied' : 'Copy'}</button>
             </div>
           </div>
           <MarkdownPane content={outB} />
