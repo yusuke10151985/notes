@@ -53,7 +53,10 @@ export async function POST(req: Request) {
                   const json = JSON.parse(payload);
                   const delta = json?.choices?.[0]?.delta?.content;
                   if (typeof delta === 'string' && delta.length) {
-                    controller.enqueue(encoder.encode(`data: ${delta}\n\n`));
+                    // SSE仕様: 複数行は data: を行ごとに
+                    const lines = String(delta).split('\n');
+                    for (const l of lines) controller.enqueue(encoder.encode(`data: ${l}\n`));
+                    controller.enqueue(encoder.encode(`\n`));
                   }
                 } catch {
                   // ignore non-JSON heartbeat lines

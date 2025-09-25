@@ -91,15 +91,23 @@ export default function SessionPage(props: any) {
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
         let agg = '';
+        let buffer = '';
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value);
-          // naive SSE parse (data: ...\n\n)
-          chunk.split('\n\n').forEach(line => {
-            const m = line.match(/^data: (.*)$/m);
-            if (m) { agg += m[1]; setter(agg); }
-          });
+          buffer += decoder.decode(value, { stream: true });
+          // イベント区切りで分割
+          const events = buffer.split('\n\n');
+          buffer = events.pop() ?? '';
+          for (const evt of events) {
+            // 複数行 data: を結合
+            const payload = evt
+              .split('\n')
+              .filter(l => l.startsWith('data:'))
+              .map(l => l.slice(5).trimStart())
+              .join('\n');
+            if (payload) { agg += payload; setter(agg); }
+          }
         }
         setAlertMsg(null);
       } else {
@@ -202,7 +210,16 @@ export default function SessionPage(props: any) {
             value={inputText}
             onChange={e=>setInputText(e.target.value)}
             onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={(e) => { setIsComposing(false); setInputText(e.currentTarget.value); }}
+            onCompositionEnd={(e) => {
+              setIsComposing(false);
+              // 確定文字列を反映しつつ、Auto-RunがONなら即時実行
+              const val = e.currentTarget.value;
+              setInputText(val);
+              if (autoRun && hasText(val)) {
+                runGenerate(1, { silent: true });
+                runGenerate(2, { silent: true });
+              }
+            }}
             className="flex-1 resize-none border rounded p-2 font-mono text-sm"
             placeholder="ここにテキストを入力（MVP：Tiptapは後続で差し替え）"
           />
