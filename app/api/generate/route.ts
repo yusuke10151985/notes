@@ -34,12 +34,41 @@ export async function POST(req: Request) {
       start(controller) {
         const encoder = new TextEncoder();
         const reader = llmStream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
         (async () => {
           try {
             for (;;) {
               const { done, value } = await reader.read();
               if (done) break;
-              controller.enqueue(encoder.encode(`data: ${new TextDecoder().decode(value)}\n\n`));
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split(/\n/);
+              buffer = lines.pop() ?? '';
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed.startsWith('data:')) continue;
+                const payload = trimmed.slice(5).trim(); // after 'data:'
+                if (payload === '[DONE]') continue;
+                try {
+                  const json = JSON.parse(payload);
+                  const delta = json?.choices?.[0]?.delta?.content;
+                  if (typeof delta === 'string' && delta.length) {
+                    controller.enqueue(encoder.encode(`data: ${delta}\n\n`));
+                  }
+                } catch {
+                  // ignore non-JSON heartbeat lines
+                }
+              }
+            }
+            // flush any remaining buffer (best-effort)
+            if (buffer) {
+              try {
+                const json = JSON.parse(buffer.replace(/^data:\s*/, ''));
+                const delta = json?.choices?.[0]?.delta?.content;
+                if (typeof delta === 'string' && delta.length) {
+                  controller.enqueue(new TextEncoder().encode(`data: ${delta}\n\n`));
+                }
+              } catch {}
             }
             controller.close();
           } catch (e) { controller.error(e); }
