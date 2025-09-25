@@ -27,6 +27,7 @@ export default function SessionPage(props: any) {
   const [copiedInput, setCopiedInput] = useState(false);
   const [copiedA, setCopiedA] = useState(false);
   const [copiedB, setCopiedB] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
 
   const LANGS = [
     { code: 'auto', name: 'Auto' },
@@ -46,7 +47,9 @@ export default function SessionPage(props: any) {
     { code: 'ru', name: 'Russian' },
   ];
 
-  async function runGenerate(pane: 1|2) {
+  const hasText = (s: string) => (s ?? '').replace(/[\s\u3000]+/g, '').length > 0;
+
+  async function runGenerate(pane: 1|2, opts?: { silent?: boolean }) {
     const mode: Mode = pane === 1 ? modeA : modeB;
     const targetLang = pane === 1 ? targetLangA : targetLangB;
     const setter = pane === 1 ? setOutA : setOutB;
@@ -60,8 +63,8 @@ export default function SessionPage(props: any) {
       }
       const controller = new AbortController();
       ref.current = controller;
-      if (!inputText.trim()) {
-        setAlertMsg('入力が空です。テキストを入力してください。');
+      if (isComposing || !hasText(inputText)) {
+        if (!opts?.silent) setAlertMsg('入力が空です。テキストを入力してください。');
         return;
       }
       const res = await fetch('/api/generate', {
@@ -130,17 +133,17 @@ export default function SessionPage(props: any) {
     }
   }
 
-  const debouncedA = useMemo(() => debounce(() => runGenerate(1), 500), [model, modeA, sourceLang, targetLangA, sessionId]);
-  const debouncedB = useMemo(() => debounce(() => runGenerate(2), 500), [model, modeB, sourceLang, targetLangB, sessionId]);
+  const debouncedA = useMemo(() => debounce(() => runGenerate(1, { silent: true }), 500), [model, modeA, sourceLang, targetLangA, sessionId]);
+  const debouncedB = useMemo(() => debounce(() => runGenerate(2, { silent: true }), 500), [model, modeB, sourceLang, targetLangB, sessionId]);
 
   useEffect(() => {
-    if (autoRun && inputText.trim()) debouncedA();
+    if (autoRun && !isComposing && hasText(inputText)) debouncedA();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText, model, modeA, sourceLang, targetLangA, autoRun]);
+  }, [inputText, model, modeA, sourceLang, targetLangA, autoRun, isComposing]);
   useEffect(() => {
-    if (autoRun && inputText.trim()) debouncedB();
+    if (autoRun && !isComposing && hasText(inputText)) debouncedB();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText, model, modeB, sourceLang, targetLangB, autoRun]);
+  }, [inputText, model, modeB, sourceLang, targetLangB, autoRun, isComposing]);
 
   useEffect(() => {
     // 入力変更時に警告クリア
@@ -183,12 +186,14 @@ export default function SessionPage(props: any) {
           <textarea
             value={inputText}
             onChange={e=>setInputText(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={(e) => { setIsComposing(false); setInputText(e.currentTarget.value); }}
             className="flex-1 resize-none border rounded p-2 font-mono text-sm"
             placeholder="ここにテキストを入力（MVP：Tiptapは後続で差し替え）"
           />
           <div className="mt-2 flex gap-2">
-            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(1)} disabled={runningA || !inputText.trim()}>Generate A (⌘Enter)</button>
-            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(2)} disabled={runningB || !inputText.trim()}>Generate B</button>
+            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(1, { silent: false })} disabled={runningA || !hasText(inputText)}>Generate A (⌘Enter)</button>
+            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(2, { silent: false })} disabled={runningB || !hasText(inputText)}>Generate B</button>
           </div>
         </section>
         <section className="border-r p-3 min-h-0 overflow-auto">
