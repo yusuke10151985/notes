@@ -14,8 +14,8 @@ export default function SessionPage(props: any) {
   const [modeA, setModeA] = useState<Mode>('translate');
   const [modeB, setModeB] = useState<Mode>('translate');
   const [sourceLang, setSourceLang] = useState('auto');
-  const [targetLangA, setTargetLangA] = useState('ja');
-  const [targetLangB, setTargetLangB] = useState('en');
+  const [targetLangA, setTargetLangA] = useState('en');
+  const [targetLangB, setTargetLangB] = useState('th');
   const [autoRun, setAutoRun] = useState(false);
   const [inputText, setInputText] = useState('');
   const [outA, setOutA] = useState('');
