@@ -57,8 +57,6 @@ export default function SessionPage(props: any) {
     const setRunning = pane === 1 ? setRunningA : setRunningB;
     const ref = pane === 1 ? abortARef : abortBRef;
     setRunning(true);
-    // 新規生成開始時は一旦ペインをクリア
-    setter('');
     try {
       // 前回の呼び出しがあれば中断
       if (ref.current) {
@@ -70,6 +68,8 @@ export default function SessionPage(props: any) {
         if (!opts?.silent) setAlertMsg('入力が空です。テキストを入力してください。');
         return;
       }
+      // 有効な入力のみクリア
+      setter('');
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,6 +94,23 @@ export default function SessionPage(props: any) {
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
         let agg = '';
+        let gotData = false;
+        const fallbackTimer = setTimeout(async () => {
+          if (gotData) return;
+          try { reader.cancel(); } catch {}
+          try {
+            const fb = await fetch('/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes', forceJSON: true } }),
+            });
+            if (fb.ok) {
+              const j = await fb.json();
+              setter(j.result_md || '');
+              setAlertMsg(null);
+            }
+          } catch {}
+        }, 2500);
         let buffer = '';
         for (;;) {
           const { done, value } = await reader.read();
@@ -109,9 +126,10 @@ export default function SessionPage(props: any) {
               .filter(l => l.startsWith('data:'))
               .map(l => l.slice(5))
               .join('\n');
-            if (payload) { agg += payload; setter(agg); }
+            if (payload) { gotData = true; agg += payload; setter(agg); }
           }
         }
+        clearTimeout(fallbackTimer);
         setAlertMsg(null);
       } else {
         const json = await res.json();

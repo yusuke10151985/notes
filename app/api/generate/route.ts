@@ -50,6 +50,12 @@ export async function POST(req: Request) {
   }
 
   const supportsStream = isOpenAI;
+
+  // Force JSON fallback when requested
+  if (supportsStream && options?.forceJSON) {
+    const { text } = await (await callLLM({ model, system, user, stream: false })) as any;
+    return Response.json({ result_md: text, pane, model, mode, sessionId });
+  }
   if (supportsStream) {
     const llmStream = await callLLM({ model, system, user, stream: true }) as ReadableStream<Uint8Array>;
     const stream = new ReadableStream({
