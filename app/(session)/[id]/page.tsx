@@ -149,9 +149,7 @@ export default function SessionPage(props: any) {
 
   return (
     <div className="flex flex-col h-dvh">
-      <header className="border-b p-3 gap-3 flex items-center justify-end">
-        <label className="ml-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run</label>
-      </header>
+      {/* ヘッダーは簡素化（Auto-RunはInput側に移動） */}
       {alertMsg && (
         <div className="bg-amber-50 text-amber-800 border-b border-amber-200 px-3 py-2 text-sm">
           {alertMsg}
@@ -174,6 +172,9 @@ export default function SessionPage(props: any) {
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
               </select>
+              <label className="text-xs text-gray-500 flex items-center gap-1">
+                <input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run
+              </label>
               <button
                 className="border rounded px-2 py-0.5 text-xs"
                 onClick={() => copyToClipboard(inputText, setCopiedInput)}
