@@ -9,9 +9,9 @@ export default function SessionPage(props: any) {
   const sessionId: string = props?.params?.id ?? '';
   // モデルは一箇所のみ
   const [model, setModel] = useState('gpt-4o-mini');
-  // デフォルトは翻訳
-  const [modeA] = useState<Mode>('translate');
-  const [modeB] = useState<Mode>('translate');
+  // デフォルトは翻訳（各ペインで変更可）
+  const [modeA, setModeA] = useState<Mode>('translate');
+  const [modeB, setModeB] = useState<Mode>('translate');
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLangA, setTargetLangA] = useState('ja');
   const [targetLangB, setTargetLangB] = useState('en');
@@ -149,15 +149,7 @@ export default function SessionPage(props: any) {
 
   return (
     <div className="flex flex-col h-dvh">
-      <header className="border-b p-3 gap-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm">
-          <label className="mr-1">Source</label>
-          <select className="border px-2 py-1 rounded" value={sourceLang} onChange={e=>setSourceLang(e.target.value)}>
-            {LANGS.map(l => (
-              <option key={l.code} value={l.code}>{l.name}</option>
-            ))}
-          </select>
-        </div>
+      <header className="border-b p-3 gap-3 flex items-center justify-end">
         <label className="ml-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run</label>
       </header>
       {alertMsg && (
@@ -167,9 +159,21 @@ export default function SessionPage(props: any) {
       )}
       <main className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1 min-h-0">
         <section className="border-r p-3 flex flex-col min-h-0">
-          <div className="text-sm font-medium mb-2 flex items-center justify-between">
+          <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Input</span>
-            <div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">Model</label>
+              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              </select>
+              <label className="text-xs text-gray-500">Source</label>
+              <select className="border px-2 py-1 rounded" value={sourceLang} onChange={e=>setSourceLang(e.target.value)}>
+                {LANGS.map(l => (
+                  <option key={l.code} value={l.code}>{l.name}</option>
+                ))}
+              </select>
               <button
                 className="border rounded px-2 py-0.5 text-xs"
                 onClick={() => copyToClipboard(inputText, setCopiedInput)}
@@ -192,11 +196,12 @@ export default function SessionPage(props: any) {
           <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Output A</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Model</label>
-              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <label className="text-xs text-gray-500">Mode</label>
+              <select className="border px-2 py-1 rounded" value={modeA} onChange={e=>setModeA(e.target.value as Mode)}>
+                <option value="translate">Translate</option>
+                <option value="summarize">Summarize</option>
+                <option value="detect">Detect</option>
+                <option value="free">Free</option>
               </select>
               <label className="text-xs text-gray-500">Lang</label>
               <select className="border px-2 py-1 rounded" value={targetLangA} onChange={e=>setTargetLangA(e.target.value)}>
@@ -216,11 +221,12 @@ export default function SessionPage(props: any) {
           <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Output B</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Model</label>
-              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <label className="text-xs text-gray-500">Mode</label>
+              <select className="border px-2 py-1 rounded" value={modeB} onChange={e=>setModeB(e.target.value as Mode)}>
+                <option value="translate">Translate</option>
+                <option value="summarize">Summarize</option>
+                <option value="detect">Detect</option>
+                <option value="free">Free</option>
               </select>
               <label className="text-xs text-gray-500">Lang</label>
               <select className="border px-2 py-1 rounded" value={targetLangB} onChange={e=>setTargetLangB(e.target.value)}>
