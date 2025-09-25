@@ -5,8 +5,8 @@ import { MarkdownPane } from '@/components/outputs/Pane';
 
 type Mode = 'translate'|'summarize'|'detect'|'free';
 
-export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: sessionId } = await params;
+export default function SessionPage(props: any) {
+  const sessionId: string = props?.params?.id ?? '';
   const [modelA, setModelA] = useState('gpt-4o-mini');
   const [modelB, setModelB] = useState('gpt-4o-mini');
   const [modeA, setModeA] = useState<Mode>('summarize');
