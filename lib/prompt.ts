@@ -8,15 +8,16 @@ export function buildPrompt(params: {
   const { mode, sourceLang='auto', targetLang='en', inputText, options, freePrompt } = params;
   const sys = 'You are a precise bilingual editor that outputs clean Markdown. Respect the requested language(s). Keep formatting tight and scannable.';
   if (mode === 'translate') {
+    const commonReq = `Requirements:\n- Translate ALL content (do not omit).\n- Preserve paragraph and blank-line structure exactly.\n- Use natural punctuation for ${targetLang}.\n- Keep proper spacing between words (do not collapse spaces).\n- Use Markdown only when lists are implied.`;
     if (sourceLang === 'auto') {
       return {
         system: sys,
-        user: `Translate the following text to ${targetLang}. Detect the source language automatically. If the text is already in ${targetLang}, keep it but polish for clarity. Use Markdown when lists are implied.\n---\n${inputText}`
+        user: `Detect the source language automatically and translate the text to ${targetLang}. If the text is already in ${targetLang}, keep it and polish for clarity.\n${commonReq}\n---\n${inputText}`
       };
     }
     return {
       system: sys,
-      user: `Translate the following text from ${sourceLang} to ${targetLang}. Keep semantics faithful. Use Markdown when lists are implied.\n---\n${inputText}`
+      user: `Translate the following text from ${sourceLang} to ${targetLang}.\n${commonReq}\n---\n${inputText}`
     };
   }
   if (mode === 'summarize') {

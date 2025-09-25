@@ -27,6 +27,28 @@ export async function POST(req: Request) {
 
   const { system, user } = buildPrompt({ mode, sourceLang, targetLang, inputText, options, freePrompt });
 
+  // E2E mode: synthetic SSE stream (no external API)
+  if (options?.e2eSSE) {
+    const content = `# OK\nmode=${mode}, target=${targetLang}\n\n${inputText}`;
+    const lines = content.split('\n');
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        let i = 0;
+        const tick = () => {
+          if (i >= lines.length) {
+            controller.close();
+            return;
+          }
+          controller.enqueue(encoder.encode(`data: ${lines[i++]}\n\n`));
+          setTimeout(tick, 10);
+        };
+        tick();
+      }
+    });
+    return new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } });
+  }
+
   const supportsStream = isOpenAI;
   if (supportsStream) {
     const llmStream = await callLLM({ model, system, user, stream: true }) as ReadableStream<Uint8Array>;

@@ -7,6 +7,7 @@ type Mode = 'translate'|'summarize'|'detect'|'free';
 
 export default function SessionPage(props: any) {
   const sessionId: string = props?.params?.id ?? '';
+  const e2e = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('e2e') === '1' : false;
   // モデルは一箇所のみ
   const [model, setModel] = useState('gpt-4o-mini');
   // デフォルトは翻訳（各ペインで変更可）
@@ -56,6 +57,8 @@ export default function SessionPage(props: any) {
     const setRunning = pane === 1 ? setRunningA : setRunningB;
     const ref = pane === 1 ? abortARef : abortBRef;
     setRunning(true);
+    // 新規生成開始時は一旦ペインをクリア
+    setter('');
     try {
       // 前回の呼び出しがあれば中断
       if (ref.current) {
@@ -70,7 +73,7 @@ export default function SessionPage(props: any) {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes' } }),
+        body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes', e2eSSE: e2e } }),
         signal: controller.signal,
       });
       if (!res.ok) {
