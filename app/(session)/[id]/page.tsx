@@ -7,10 +7,11 @@ type Mode = 'translate'|'summarize'|'detect'|'free';
 
 export default function SessionPage(props: any) {
   const sessionId: string = props?.params?.id ?? '';
-  const [modelA, setModelA] = useState('gpt-4o-mini');
-  const [modelB, setModelB] = useState('gpt-4o-mini');
-  const [modeA, setModeA] = useState<Mode>('summarize');
-  const [modeB, setModeB] = useState<Mode>('translate');
+  // モデルは一箇所のみ
+  const [model, setModel] = useState('gpt-4o-mini');
+  // デフォルトは翻訳
+  const [modeA] = useState<Mode>('translate');
+  const [modeB] = useState<Mode>('translate');
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLangA, setTargetLangA] = useState('ja');
   const [targetLangB, setTargetLangB] = useState('en');
@@ -24,8 +25,25 @@ export default function SessionPage(props: any) {
   const abortARef = useRef<AbortController | null>(null);
   const abortBRef = useRef<AbortController | null>(null);
 
+  const LANGS = [
+    { code: 'auto', name: 'Auto' },
+    { code: 'ja', name: '日本語' },
+    { code: 'en', name: 'English' },
+    { code: 'zh', name: '中文' },
+    { code: 'ko', name: '한국어' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'es', name: 'Español' },
+    { code: 'th', name: 'ไทย' },
+    { code: 'vi', name: 'Tiếng Việt' },
+    { code: 'id', name: 'Bahasa Indonesia' },
+    { code: 'pt', name: 'Português' },
+    { code: 'hi', name: 'हिन्दी' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'ru', name: 'Русский' },
+  ];
+
   async function runGenerate(pane: 1|2) {
-    const model = pane === 1 ? modelA : modelB;
     const mode: Mode = pane === 1 ? modeA : modeB;
     const targetLang = pane === 1 ? targetLangA : targetLangB;
     const setter = pane === 1 ? setOutA : setOutB;
@@ -99,17 +117,17 @@ export default function SessionPage(props: any) {
     }
   }
 
-  const debouncedA = useMemo(() => debounce(() => runGenerate(1), 500), [modelA, modeA, sourceLang, targetLangA, sessionId]);
-  const debouncedB = useMemo(() => debounce(() => runGenerate(2), 500), [modelB, modeB, sourceLang, targetLangB, sessionId]);
+  const debouncedA = useMemo(() => debounce(() => runGenerate(1), 500), [model, modeA, sourceLang, targetLangA, sessionId]);
+  const debouncedB = useMemo(() => debounce(() => runGenerate(2), 500), [model, modeB, sourceLang, targetLangB, sessionId]);
 
   useEffect(() => {
     if (autoRun && inputText.trim()) debouncedA();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText, modelA, modeA, sourceLang, targetLangA, autoRun]);
+  }, [inputText, model, modeA, sourceLang, targetLangA, autoRun]);
   useEffect(() => {
     if (autoRun && inputText.trim()) debouncedB();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText, modelB, modeB, sourceLang, targetLangB, autoRun]);
+  }, [inputText, model, modeB, sourceLang, targetLangB, autoRun]);
 
   useEffect(() => {
     // 入力変更時に警告クリア
@@ -119,44 +137,15 @@ export default function SessionPage(props: any) {
   return (
     <div className="flex flex-col h-dvh">
       <header className="border-b p-3 gap-3 flex items-center justify-between">
-        <div className="font-semibold">Memo · Translate · Summarize</div>
         <div className="flex items-center gap-2 text-sm">
-          <label>Model A</label>
-          <select className="border px-2 py-1 rounded" value={modelA} onChange={e=>setModelA(e.target.value)}>
-            <option value="gpt-4o-mini">gpt-4o-mini</option>
-            <option value="gpt-4o">gpt-4o</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <label className="mr-1">Source</label>
+          <select className="border px-2 py-1 rounded" value={sourceLang} onChange={e=>setSourceLang(e.target.value)}>
+            {LANGS.map(l => (
+              <option key={l.code} value={l.code}>{l.name}</option>
+            ))}
           </select>
-          <label>Mode A</label>
-          <select className="border px-2 py-1 rounded" value={modeA} onChange={e=>setModeA(e.target.value as Mode)}>
-            <option value="translate">Translate</option>
-            <option value="summarize">Summarize</option>
-            <option value="detect">Detect</option>
-            <option value="free">Free</option>
-          </select>
-          <label>Out-1 Lang</label>
-          <input className="border px-2 py-1 rounded w-16" value={targetLangA} onChange={e=>setTargetLangA(e.target.value)} />
-          <div className="w-4"/>
-          <label>Model B</label>
-          <select className="border px-2 py-1 rounded" value={modelB} onChange={e=>setModelB(e.target.value)}>
-            <option value="gpt-4o-mini">gpt-4o-mini</option>
-            <option value="gpt-4o">gpt-4o</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-          </select>
-          <label>Mode B</label>
-          <select className="border px-2 py-1 rounded" value={modeB} onChange={e=>setModeB(e.target.value as Mode)}>
-            <option value="translate">Translate</option>
-            <option value="summarize">Summarize</option>
-            <option value="detect">Detect</option>
-            <option value="free">Free</option>
-          </select>
-          <label>Out-2 Lang</label>
-          <input className="border px-2 py-1 rounded w-16" value={targetLangB} onChange={e=>setTargetLangB(e.target.value)} />
-          <div className="w-4"/>
-          <label>Source</label>
-          <input className="border px-2 py-1 rounded w-16" value={sourceLang} onChange={e=>setSourceLang(e.target.value)} />
-          <label className="ml-2 flex items-center gap-1"><input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run</label>
         </div>
+        <label className="ml-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run</label>
       </header>
       {alertMsg && (
         <div className="bg-amber-50 text-amber-800 border-b border-amber-200 px-3 py-2 text-sm">
@@ -178,11 +167,43 @@ export default function SessionPage(props: any) {
           </div>
         </section>
         <section className="border-r p-3 min-h-0 overflow-auto">
-          <div className="text-sm font-medium mb-2">Output A</div>
+          <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
+            <span>Output A</span>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">Model</label>
+              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              </select>
+              <label className="text-xs text-gray-500">Lang</label>
+              <select className="border px-2 py-1 rounded" value={targetLangA} onChange={e=>setTargetLangA(e.target.value)}>
+                {LANGS.filter(l=>l.code!=='auto').map(l => (
+                  <option key={l.code} value={l.code}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <MarkdownPane content={outA} />
         </section>
         <section className="p-3 min-h-0 overflow-auto">
-          <div className="text-sm font-medium mb-2">Output B</div>
+          <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
+            <span>Output B</span>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">Model</label>
+              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              </select>
+              <label className="text-xs text-gray-500">Lang</label>
+              <select className="border px-2 py-1 rounded" value={targetLangB} onChange={e=>setTargetLangB(e.target.value)}>
+                {LANGS.filter(l=>l.code!=='auto').map(l => (
+                  <option key={l.code} value={l.code}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <MarkdownPane content={outB} />
         </section>
       </main>
