@@ -14,7 +14,7 @@ export default function SessionPage(props: any) {
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLangA, setTargetLangA] = useState('ja');
   const [targetLangB, setTargetLangB] = useState('en');
-  const [autoRun, setAutoRun] = useState(true);
+  const [autoRun, setAutoRun] = useState(false);
   const [inputText, setInputText] = useState('');
   const [outA, setOutA] = useState('');
   const [outB, setOutB] = useState('');
@@ -30,6 +30,10 @@ export default function SessionPage(props: any) {
     const setRunning = pane === 1 ? setRunningA : setRunningB;
     setRunning(true);
     try {
+      if (!inputText.trim()) {
+        setAlertMsg('入力が空です。テキストを入力してください。');
+        return;
+      }
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,9 +67,11 @@ export default function SessionPage(props: any) {
             if (m) { agg += m[1]; setter(agg); }
           });
         }
+        setAlertMsg(null);
       } else {
         const json = await res.json();
         setter(json.result_md || '');
+        setAlertMsg(null);
       }
     } finally {
       setRunning(false);
@@ -76,13 +82,18 @@ export default function SessionPage(props: any) {
   const debouncedB = useMemo(() => debounce(() => runGenerate(2), 500), [modelB, modeB, sourceLang, targetLangB, sessionId]);
 
   useEffect(() => {
-    if (autoRun) debouncedA();
+    if (autoRun && inputText.trim()) debouncedA();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, modelA, modeA, sourceLang, targetLangA, autoRun]);
   useEffect(() => {
-    if (autoRun) debouncedB();
+    if (autoRun && inputText.trim()) debouncedB();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, modelB, modeB, sourceLang, targetLangB, autoRun]);
+
+  useEffect(() => {
+    // 入力変更時に警告クリア
+    setAlertMsg(null);
+  }, [inputText]);
 
   return (
     <div className="flex flex-col h-dvh">
@@ -141,8 +152,8 @@ export default function SessionPage(props: any) {
             placeholder="ここにテキストを入力（MVP：Tiptapは後続で差し替え）"
           />
           <div className="mt-2 flex gap-2">
-            <button className="border rounded px-3 py-1" onClick={()=>runGenerate(1)} disabled={runningA}>Generate A (⌘Enter)</button>
-            <button className="border rounded px-3 py-1" onClick={()=>runGenerate(2)} disabled={runningB}>Generate B</button>
+            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(1)} disabled={runningA || !inputText.trim()}>Generate A (⌘Enter)</button>
+            <button className="border rounded px-3 py-1 disabled:opacity-50" onClick={()=>runGenerate(2)} disabled={runningB || !inputText.trim()}>Generate B</button>
           </div>
         </section>
         <section className="border-r p-3 min-h-0 overflow-auto">
