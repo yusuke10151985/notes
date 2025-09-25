@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash.debounce';
 import { MarkdownPane } from '@/components/outputs/Pane';
 
@@ -21,6 +21,8 @@ export default function SessionPage(props: any) {
   const [runningA, setRunningA] = useState(false);
   const [runningB, setRunningB] = useState(false);
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
+  const abortARef = useRef<AbortController | null>(null);
+  const abortBRef = useRef<AbortController | null>(null);
 
   async function runGenerate(pane: 1|2) {
     const model = pane === 1 ? modelA : modelB;
@@ -28,8 +30,15 @@ export default function SessionPage(props: any) {
     const targetLang = pane === 1 ? targetLangA : targetLangB;
     const setter = pane === 1 ? setOutA : setOutB;
     const setRunning = pane === 1 ? setRunningA : setRunningB;
+    const ref = pane === 1 ? abortARef : abortBRef;
     setRunning(true);
     try {
+      // 前回の呼び出しがあれば中断
+      if (ref.current) {
+        try { ref.current.abort(); } catch {}
+      }
+      const controller = new AbortController();
+      ref.current = controller;
       if (!inputText.trim()) {
         setAlertMsg('入力が空です。テキストを入力してください。');
         return;
@@ -37,7 +46,8 @@ export default function SessionPage(props: any) {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes' } })
+        body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes' } }),
+        signal: controller.signal,
       });
       if (!res.ok) {
         // Try to parse JSON error and show a friendly alert
@@ -73,8 +83,19 @@ export default function SessionPage(props: any) {
         setter(json.result_md || '');
         setAlertMsg(null);
       }
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        // 中断は無視
+        return;
+      }
+      throw e;
     } finally {
       setRunning(false);
+      // 最新のコントローラのみクリア
+      const curRef = pane === 1 ? abortARef : abortBRef;
+      if (curRef.current === (ref as any).current) {
+        curRef.current = null;
+      }
     }
   }
 
