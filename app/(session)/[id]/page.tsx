@@ -30,20 +30,20 @@ export default function SessionPage(props: any) {
 
   const LANGS = [
     { code: 'auto', name: 'Auto' },
-    { code: 'ja', name: '日本語' },
+    { code: 'ja', name: 'Japanese' },
     { code: 'en', name: 'English' },
-    { code: 'zh', name: '中文' },
-    { code: 'ko', name: '한국어' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'es', name: 'Español' },
-    { code: 'th', name: 'ไทย' },
-    { code: 'vi', name: 'Tiếng Việt' },
-    { code: 'id', name: 'Bahasa Indonesia' },
-    { code: 'pt', name: 'Português' },
-    { code: 'hi', name: 'हिन्दी' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'ru', name: 'Русский' },
+    { code: 'zh', name: 'Chinese' },
+    { code: 'ko', name: 'Korean' },
+    { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' },
+    { code: 'es', name: 'Spanish' },
+    { code: 'th', name: 'Thai' },
+    { code: 'vi', name: 'Vietnamese' },
+    { code: 'id', name: 'Indonesian' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'hi', name: 'Hindi' },
+    { code: 'ar', name: 'Arabic' },
+    { code: 'ru', name: 'Russian' },
   ];
 
   async function runGenerate(pane: 1|2) {
