@@ -160,14 +160,12 @@ export default function SessionPage(props: any) {
           <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Input</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Model</label>
-              <select className="border px-2 py-1 rounded" value={model} onChange={e=>setModel(e.target.value)}>
+              <select className="border px-2 py-1 rounded" title="Model" value={model} onChange={e=>setModel(e.target.value)}>
                 <option value="gpt-4o-mini">gpt-4o-mini</option>
                 <option value="gpt-4o">gpt-4o</option>
                 <option value="gemini-2.0-flash">gemini-2.0-flash</option>
               </select>
-              <label className="text-xs text-gray-500">Source</label>
-              <select className="border px-2 py-1 rounded" value={sourceLang} onChange={e=>setSourceLang(e.target.value)}>
+              <select className="border px-2 py-1 rounded" title="Source" value={sourceLang} onChange={e=>setSourceLang(e.target.value)}>
                 {LANGS.map(l => (
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
@@ -197,15 +195,13 @@ export default function SessionPage(props: any) {
           <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Output A</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Mode</label>
-              <select className="border px-2 py-1 rounded" value={modeA} onChange={e=>setModeA(e.target.value as Mode)}>
+              <select className="border px-2 py-1 rounded" title="Mode" value={modeA} onChange={e=>setModeA(e.target.value as Mode)}>
                 <option value="translate">Translate</option>
                 <option value="summarize">Summarize</option>
                 <option value="detect">Detect</option>
                 <option value="free">Free</option>
               </select>
-              <label className="text-xs text-gray-500">Lang</label>
-              <select className="border px-2 py-1 rounded" value={targetLangA} onChange={e=>setTargetLangA(e.target.value)}>
+              <select className="border px-2 py-1 rounded" title="Target" value={targetLangA} onChange={e=>setTargetLangA(e.target.value)}>
                 {LANGS.filter(l=>l.code!=='auto').map(l => (
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
@@ -222,15 +218,13 @@ export default function SessionPage(props: any) {
           <div className="text-sm font-medium mb-2 flex items-center justify-between gap-2">
             <span>Output B</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Mode</label>
-              <select className="border px-2 py-1 rounded" value={modeB} onChange={e=>setModeB(e.target.value as Mode)}>
+              <select className="border px-2 py-1 rounded" title="Mode" value={modeB} onChange={e=>setModeB(e.target.value as Mode)}>
                 <option value="translate">Translate</option>
                 <option value="summarize">Summarize</option>
                 <option value="detect">Detect</option>
                 <option value="free">Free</option>
               </select>
-              <label className="text-xs text-gray-500">Lang</label>
-              <select className="border px-2 py-1 rounded" value={targetLangB} onChange={e=>setTargetLangB(e.target.value)}>
+              <select className="border px-2 py-1 rounded" title="Target" value={targetLangB} onChange={e=>setTargetLangB(e.target.value)}>
                 {LANGS.filter(l=>l.code!=='auto').map(l => (
                   <option key={l.code} value={l.code}>{l.name}</option>
                 ))}
