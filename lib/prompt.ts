@@ -8,6 +8,12 @@ export function buildPrompt(params: {
   const { mode, sourceLang='auto', targetLang='en', inputText, options, freePrompt } = params;
   const sys = 'You are a precise bilingual editor that outputs clean Markdown. Respect the requested language(s). Keep formatting tight and scannable.';
   if (mode === 'translate') {
+    if (sourceLang === 'auto') {
+      return {
+        system: sys,
+        user: `Translate the following text to ${targetLang}. Detect the source language automatically. If the text is already in ${targetLang}, keep it but polish for clarity. Use Markdown when lists are implied.\n---\n${inputText}`
+      };
+    }
     return {
       system: sys,
       user: `Translate the following text from ${sourceLang} to ${targetLang}. Keep semantics faithful. Use Markdown when lists are implied.\n---\n${inputText}`
@@ -28,4 +34,3 @@ export function buildPrompt(params: {
     user: `Act on the instruction below and answer in ${targetLang} with Markdown.\n---\n${freePrompt ?? ''}\nContext:\n${inputText}`
   };
 }
-
