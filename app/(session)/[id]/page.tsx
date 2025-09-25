@@ -20,6 +20,7 @@ export default function SessionPage(props: any) {
   const [outB, setOutB] = useState('');
   const [runningA, setRunningA] = useState(false);
   const [runningB, setRunningB] = useState(false);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
 
   async function runGenerate(pane: 1|2) {
     const model = pane === 1 ? modelA : modelB;
@@ -34,6 +35,20 @@ export default function SessionPage(props: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, pane, mode, model, sourceLang, targetLang, inputText, options: { summaryPreset: 'meeting-notes' } })
       });
+      if (!res.ok) {
+        // Try to parse JSON error and show a friendly alert
+        try {
+          const j = await res.json();
+          const code = j?.error;
+          const msg = j?.message || 'Request failed';
+          setAlertMsg(`${code ? `[${code}] ` : ''}${msg}`);
+          // If config missing, turn off auto-run to prevent loops
+          if (code === 'config_missing') setAutoRun(false);
+        } catch {
+          setAlertMsg(`Request failed: HTTP ${res.status}`);
+        }
+        return;
+      }
       if (res.headers.get('content-type')?.includes('text/event-stream')) {
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
@@ -111,6 +126,11 @@ export default function SessionPage(props: any) {
           <label className="ml-2 flex items-center gap-1"><input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run</label>
         </div>
       </header>
+      {alertMsg && (
+        <div className="bg-amber-50 text-amber-800 border-b border-amber-200 px-3 py-2 text-sm">
+          {alertMsg}
+        </div>
+      )}
       <main className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1 min-h-0">
         <section className="border-r p-3 flex flex-col min-h-0">
           <div className="text-sm font-medium mb-2">Input</div>
