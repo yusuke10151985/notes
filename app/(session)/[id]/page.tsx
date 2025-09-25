@@ -136,6 +136,16 @@ export default function SessionPage(props: any) {
   const debouncedA = useMemo(() => debounce(() => runGenerate(1, { silent: true }), 500), [model, modeA, sourceLang, targetLangA, sessionId]);
   const debouncedB = useMemo(() => debounce(() => runGenerate(2, { silent: true }), 500), [model, modeB, sourceLang, targetLangB, sessionId]);
 
+  // Auto-Run トグル時の即時実行
+  const handleAutoRunToggle = (checked: boolean) => {
+    setAutoRun(checked);
+    if (checked && !isComposing && hasText(inputText)) {
+      // すぐに両ペインを生成（サイレント）
+      runGenerate(1, { silent: true });
+      runGenerate(2, { silent: true });
+    }
+  };
+
   useEffect(() => {
     if (autoRun && !isComposing && hasText(inputText)) debouncedA();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,6 +154,11 @@ export default function SessionPage(props: any) {
     if (autoRun && !isComposing && hasText(inputText)) debouncedB();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, model, modeB, sourceLang, targetLangB, autoRun, isComposing]);
+
+  // アンマウント時にデバウンスをキャンセル
+  useEffect(() => {
+    return () => { debouncedA.cancel(); debouncedB.cancel(); };
+  }, [debouncedA, debouncedB]);
 
   useEffect(() => {
     // 入力変更時に警告クリア
@@ -174,7 +189,7 @@ export default function SessionPage(props: any) {
                 ))}
               </select>
               <label className="text-xs text-gray-500 flex items-center gap-1">
-                <input type="checkbox" checked={autoRun} onChange={e=>setAutoRun(e.target.checked)} /> Auto-Run
+                <input type="checkbox" checked={autoRun} onChange={e=>handleAutoRunToggle(e.target.checked)} /> Auto-Run
               </label>
               <button
                 className="border rounded px-2 py-0.5 text-xs"
